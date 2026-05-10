@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import auth
+from app.routers import auth, urls, analytics
 import app.models  # noqa: F401
 
 app = FastAPI(
@@ -18,8 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
 app.include_router(auth.router)
+app.include_router(urls.router)
+app.include_router(analytics.router)
 
 
 @app.get("/health")
