@@ -18,11 +18,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
-app.include_router(urls.router)
-app.include_router(analytics.router)
-
-
+# Health check MUST be before urls router — /{short_code} catches everything
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "app": settings.BASE_URL}
+
+# Routers — urls router last because it has catch-all /{short_code}
+app.include_router(auth.router)
+app.include_router(analytics.router)
+app.include_router(urls.router)    # ← always last
