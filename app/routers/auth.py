@@ -11,6 +11,7 @@ from app.services.auth_service import (
 from app.utils.jwt import decode_token
 from app.dependencies import get_redis
 from app.dependencies import get_redis, get_current_user
+import redis.asyncio as Redis
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
@@ -45,5 +46,4 @@ async def logout(
     current_user: dict = Depends(get_current_user),
     redis_client: Redis = Depends(get_redis)
 ):
-    # we don't have the raw token here anymore
     return {"message": "Logged out successfully"}
