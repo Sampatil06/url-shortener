@@ -10,6 +10,8 @@ Live API: http://51.21.164.72:8000/docs
 - Redis caching for fast redirects
 - Async click tracking via background tasks
 - Analytics — click summary, 7-day timeline, top referrers
+- Collision-safe short code generation with retry logic
+- Automatic cache fallback to PostgreSQL if Redis is unavailable
 - Rate limiting per IP
 - 18 automated tests
 
@@ -29,7 +31,42 @@ Live API: http://51.21.164.72:8000/docs
 
 ## Architecture
 
+```mermaid
+graph TD
+    Client -->|HTTP Request| FastAPI
+    FastAPI -->|Check cache| Redis
+    Redis -->|Cache hit| FastAPI
+    FastAPI -->|Cache miss| PostgreSQL
+    PostgreSQL -->|URL data| FastAPI
+    FastAPI -->|302 Redirect| Client
+    FastAPI -->|Background task| ClickTracker
+    ClickTracker -->|Save click| PostgreSQL
+    FastAPI -->|Token blacklist| Redis
+```
+
 ## API Endpoints
+
+## Redirect Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant Redis
+    participant PostgreSQL
+
+    User->>API: GET /{short_code}
+    API->>Redis: Check cache
+    alt Cache Hit
+        Redis-->>API: Return original URL
+    else Cache Miss
+        API->>PostgreSQL: Query URL
+        PostgreSQL-->>API: Return URL
+        API->>Redis: Store in cache (24h TTL)
+    end
+    API-->>User: 302 Redirect
+    API->>PostgreSQL: Track click (background)
+```
 
 ### Auth
 
