@@ -1,22 +1,11 @@
 from redis.asyncio import Redis
 from app.config import settings
-from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.utils.jwt import decode_token
 
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    payload = decode_token(token)
-    if not payload or payload.get("type") != "access":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    return payload
 
 async def get_redis() -> Redis:
     client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
@@ -26,7 +15,10 @@ async def get_redis() -> Redis:
         await client.aclose()
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    token = credentials.credentials
     payload = decode_token(token)
 
     if not payload or payload.get("type") != "access":
@@ -35,5 +27,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"}
         )
-
-    return payload  # contains {"sub": user_id, "exp": ..., "type": "access"}
+    return payload

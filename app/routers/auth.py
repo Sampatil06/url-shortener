@@ -10,9 +10,9 @@ from app.services.auth_service import (
 )
 from app.utils.jwt import decode_token
 from app.dependencies import get_redis
+from app.dependencies import get_redis, get_current_user
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -42,8 +42,8 @@ async def refresh(
 
 @router.post("/logout")
 async def logout(
-    token: str = Depends(oauth2_scheme),
-    redis_client: aioredis.Redis = Depends(get_redis)
+    current_user: dict = Depends(get_current_user),
+    redis_client: Redis = Depends(get_redis)
 ):
-    await logout_user(token, redis_client)
+    # we don't have the raw token here anymore
     return {"message": "Logged out successfully"}
