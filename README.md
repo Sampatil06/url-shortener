@@ -44,8 +44,6 @@ graph TD
     FastAPI -->|Token blacklist| Redis
 ```
 
-## API Endpoints
-
 ## Redirect Flow
 
 ```mermaid
@@ -67,6 +65,8 @@ sequenceDiagram
     API-->>User: 302 Redirect
     API->>PostgreSQL: Track click (background)
 ```
+
+## API Endpoints
 
 ### Auth
 
